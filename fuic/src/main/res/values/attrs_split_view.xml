@@ -1,0 +1,11 @@
+<resources>
+	<declare-styleable name="SplitView">
+		<!--attr name="exampleString" format="string"/>
+		<attr name="exampleDimension" format="dimension"/>
+		<attr name="exampleColor" format="color"/>
+		<attr name="exampleDrawable" format="color|reference"/-->
+		<attr name="firstWeight" format="integer" />
+		<attr name="secondWeight" format="integer" />
+		<attr name="holderSize" format="dimension" />
+	</declare-styleable>
+</resources>

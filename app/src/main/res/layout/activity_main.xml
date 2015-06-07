@@ -1,0 +1,18 @@
+<FrameLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:background="@color/button_material_dark">
+
+	<com.fmakdemir.fuic.SplitView
+		android:id="@+id/split_view_test"
+		android:background="#ccc"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:layout_gravity="center"
+		app:firstWeight="1"
+		app:secondWeight="2"
+		app:holderSize="20dp" />
+
+</FrameLayout>

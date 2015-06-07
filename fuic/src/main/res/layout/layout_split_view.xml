@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+			  xmlns:tools="http://schemas.android.com/tools"
+			  android:id="@+id/split_root"
+			  android:orientation="vertical"
+			  android:layout_width="match_parent"
+			  android:layout_height="match_parent">
+	<FrameLayout
+		android:id="@+id/split_first"
+		android:layout_width="match_parent"
+		android:background="@android:color/holo_orange_light"
+		android:layout_height="33dp" />
+
+	<FrameLayout
+		android:id="@+id/split_holder"
+		android:layout_width="match_parent"
+		android:layout_height="10dp"
+		android:background="@android:color/holo_red_light" >
+		<ImageView
+			android:layout_width="match_parent"
+			android:layout_height="10dp"
+			android:scaleType="fitCenter"
+			android:src="@android:drawable/button_onoff_indicator_off"
+			android:layout_gravity="center" />
+	</FrameLayout>
+
+	<FrameLayout
+		android:id="@+id/split_second"
+		android:layout_width="match_parent"
+		android:background="@android:color/holo_blue_bright"
+		android:layout_height="66dp" />
+
+</LinearLayout>
