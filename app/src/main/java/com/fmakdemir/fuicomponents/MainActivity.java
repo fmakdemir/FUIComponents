@@ -9,6 +9,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.fmakdemir.fuic.SplitView;
@@ -24,6 +25,15 @@ public class MainActivity extends Activity {
 		TextView tv = new TextView(this);
 		tv.setText("Replaced View 1");
 		view.replaceFirst(tv);
+
+		SplitView view2 = new SplitView(this);
+		tv = new TextView(this);
+		tv.setText("Dynamic split view");
+		view2.replaceSecond(tv);
+
+		FrameLayout root = (FrameLayout) findViewById(R.id.second_split_root);
+		root.removeAllViews();
+		root.addView(view2);
 	}
 
 	public static class PlaceHolderFragment extends Fragment {

@@ -1,17 +1,13 @@
 package com.fmakdemir.fuic;
 
-import android.app.Activity;
-import android.app.Fragment;
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -25,14 +21,15 @@ public class SplitView extends LinearLayout {
 
 	private LinearLayout rootView; // root view of our views
 	private FrameLayout firstDiv, secondDiv, holderView; // first, second, and holder views
-	private int firstWeight, secondWeight; // height given as attribute
 	private int holderSize;
 
 	private int contentWidth, contentHeight;
-	private double ratio;
+	private float ratio;
 
 	private LayoutParams firstLayoutParams, secondLayoutParams;
-	private static final double MIN_RATIO = 0.1, MAX_RATIO = 0.9;
+	private float minRatio, maxRatio;
+
+	private static final int BASE = 100;
 
 	public SplitView(Context context) {
 		super(context);
@@ -49,8 +46,20 @@ public class SplitView extends LinearLayout {
 		init(attrs, defStyle);
 	}
 
+	private float getFloatFraction(int id) {
+		return getResources().getFraction(id, BASE, BASE)/BASE;
+	}
+
 	private void init(AttributeSet attrs, int defStyle) {
 		Log.v(TAG, "Init");
+
+		int firstWeight = getResources().getInteger(R.integer.DEFAULT_SPLIT_WEIGHT);
+		int secondWeight = getResources().getInteger(R.integer.DEFAULT_SPLIT_WEIGHT);
+
+		float defaultMinRatio = getFloatFraction(R.fraction.DEFAULT_MIN_SPLIT_RATIO);
+		float defaultMaxRatio = getFloatFraction(R.fraction.DEFAULT_MAX_SPLIT_RATIO);
+		minRatio = defaultMinRatio;
+		maxRatio = defaultMaxRatio;
 
 		// Load attributes
 		final TypedArray a = getContext().obtainStyledAttributes(
@@ -64,22 +73,42 @@ public class SplitView extends LinearLayout {
 			secondWeight = a.getInt(R.styleable.SplitView_secondWeight, 0);
 		}
 
+		Log.d(TAG+"_Weights", ""+firstWeight+ ", "+secondWeight);
+
+		// get values from attributes or default values
+		minRatio = a.getFraction(R.styleable.SplitView_minSplitRatio, BASE, BASE, minRatio*BASE);
+		minRatio /= BASE;
+		maxRatio = a.getFraction(R.styleable.SplitView_maxSplitRatio, BASE, BASE, maxRatio*BASE);
+		maxRatio /= BASE;
+
+		// check for invalid ratios
+		if (minRatio > maxRatio || minRatio < 0) {
+			minRatio = defaultMinRatio;
+		}
+		if (minRatio > maxRatio || maxRatio > 1) {
+			maxRatio = defaultMaxRatio;
+		}
+
+		Log.d(TAG+"_minMaxRatios", ""+minRatio+ ", "+maxRatio);
+
 		if (a.hasValue(R.styleable.SplitView_holderSize)) {
 			setHolderSize(a.getDimensionPixelSize(R.styleable.SplitView_holderSize,
 					R.dimen.DEFAULT_HOLDER_SIZE));
 		}
+		// don't allow any smaller than default size
 		int defSize = (int) getResources().getDimension(R.dimen.DEFAULT_HOLDER_SIZE);
 		if (getHolderSize() < defSize) {
 			setHolderSize(defSize);
 		}
 
+		Log.d(TAG+"_holderSize", ""+getHolderSize());
+
 		a.recycle();
 
-//		Log.v(TAG + "_attrs", "F, S: " + firstWeight + ", " + secondWeight);
-
-		Log.v(TAG, "Add view");
+		Log.d(TAG, "Add default views");
 		LayoutInflater inflater = (LayoutInflater)getContext().getSystemService(
 				Context.LAYOUT_INFLATER_SERVICE);
+		// having a known layout is easier for resize of others
 		rootView = (LinearLayout) inflater.inflate(R.layout.layout_split_view, null, false);
 
 		firstDiv = (FrameLayout) rootView.findViewById(R.id.split_first);
@@ -89,7 +118,7 @@ public class SplitView extends LinearLayout {
 		firstLayoutParams = (LayoutParams) firstDiv.getLayoutParams();
 		secondLayoutParams = (LayoutParams) secondDiv.getLayoutParams();
 
-		ratio = (double)firstWeight/(firstWeight+secondWeight);
+		ratio = (float) firstWeight /(firstWeight + secondWeight);
 		Log.d("TTT", "ratio: "+ratio);
 
 		TextView tv;
@@ -130,7 +159,7 @@ public class SplitView extends LinearLayout {
 
 		@Override
 		public boolean onGenericMotion(View view, MotionEvent event) {
-//			Log.i(getClass().getSimpleName(), "" + event.getAction() + "|" + event.getX() + ", " + event.getY());
+//			Log.d(getClass().getSimpleName(), "" + event.getAction() + "|" + event.getX() + ", " + event.getY());
 			return false;
 		}
 	}
@@ -146,11 +175,10 @@ public class SplitView extends LinearLayout {
 		public boolean onTouch(View view, MotionEvent event) {
 //			if (currentState != State.EDIT_MOVE) return false;
 
-			int x, y, topMargin;
-			x = (int) event.getX();
+			int y, topMargin;
 			y = (int) event.getY();
 
-//			Log.i(getClass().getSimpleName(), "" + event.getAction() + "|" + x + ", " + y + " | " +
+//			Log.d(getClass().getSimpleName(), "" + event.getAction() + "|" + x + ", " + y + " | " +
 //					(double)y/contentHeight);
 
 /*			for (int i=0; i<rootView.getChildCount(); ++i) {
@@ -171,14 +199,14 @@ public class SplitView extends LinearLayout {
 						break;
 					}
 					topMargin = y - getHolderSize()/2;
-					ratio = (double)topMargin/contentHeight;
-					if (ratio < MIN_RATIO) {
-						ratio = MIN_RATIO;
+					ratio = (float)topMargin/contentHeight;
+					if (ratio < minRatio) {
+						ratio = minRatio;
 					}
-					if (ratio > MAX_RATIO) {
-						ratio = MAX_RATIO;
+					if (ratio > maxRatio) {
+						ratio = maxRatio;
 					}
-					updateSplits(contentWidth, contentHeight+getHolderSize());
+					updateSplits();
 					Log.d("TTT", "ratio: "+ratio);
 //					leftMargin = (int) event.getRawX() - (view.getWidth() / 2);
 					break;
@@ -216,7 +244,7 @@ public class SplitView extends LinearLayout {
 		int parentWidth = MeasureSpec.getSize(widthMeasureSpec);
 		int parentHeight = MeasureSpec.getSize(heightMeasureSpec);
 
-		Log.i(TAG + "_get", "W, H: " + getWidth() + ", " + getHeight()+" | "+parentWidth + ", "+parentHeight);
+		Log.d(TAG + "_get", "W, H: " + getWidth() + ", " + getHeight() + " | " + parentWidth + ", " + parentHeight);
 		LayoutParams params = (LayoutParams) holderView.getLayoutParams();
 		params.height = getHolderSize();
 		holderView.setLayoutParams(params);
@@ -225,21 +253,24 @@ public class SplitView extends LinearLayout {
 			contentWidth = parentWidth - getPaddingLeft() - getPaddingRight();
 			contentHeight = parentHeight - getPaddingTop() - getPaddingBottom() - getHolderSize();
 		}
-		updateSplits(parentWidth, parentHeight);
+		updateSplits();
 
-		Log.i(TAG + "_sizes", "CW: " + contentWidth + " |CH: " + contentHeight + " |FH: " + firstLayoutParams.height + " |SH: " + secondLayoutParams.height);
+		Log.d(TAG + "_sizes", "CW: " + contentWidth + " |CH: " + contentHeight + " |FH: " + firstLayoutParams.height + " |SH: " + secondLayoutParams.height);
+		params = (LayoutParams) rootView.getLayoutParams();
+		Log.d(TAG + "_root", "WxH: " + rootView.getWidth() + ", " + rootView.getHeight() + " |WxH: " + params.width + ", " + params.height);
 
+//		setLayoutParams(new LayoutParams(parentWidth, parentHeight)); // we don't know parent LayoutParams type
 		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 	}
 
-	void updateSplits(int parentWidth, int parentHeight) {
-		Log.i(TAG + "_content", "W, H: " + contentWidth + ", " + contentHeight);
+	void updateSplits() {
+		Log.d(TAG + "_content", "W, H: " + contentWidth + ", " + contentHeight);
 
 		firstLayoutParams.height = (int)(contentHeight * ratio);
 		secondLayoutParams.height = contentHeight - firstLayoutParams.height;
 
-		Log.i(TAG + "_first", "W, H: " + firstLayoutParams.width + ", " + firstLayoutParams.height);
-		Log.i(TAG + "_second", "W, H: " + secondLayoutParams.width + ", " + secondLayoutParams.height);
+		Log.d(TAG + "_first", "W, H: " + firstLayoutParams.width + ", " + firstLayoutParams.height);
+		Log.d(TAG + "_second", "W, H: " + secondLayoutParams.width + ", " + secondLayoutParams.height);
 
 		firstDiv.setLayoutParams(firstLayoutParams);
 		secondDiv.setLayoutParams(secondLayoutParams);
@@ -249,7 +280,7 @@ public class SplitView extends LinearLayout {
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
 
-		// TODO: consider storing these as member variables to reduce
+		// consider storing these as member variables to reduce
 		// allocations per draw cycle.
 		int paddingLeft = getPaddingLeft();
 		int paddingTop = getPaddingTop();
@@ -283,30 +314,4 @@ public class SplitView extends LinearLayout {
 		secondDiv.addView(v);
 	}
 
-	public static class SplitPlaceHolderFragment extends Fragment {
-		static int id;
-
-		public static SplitPlaceHolderFragment newInstance() {
-			return new SplitPlaceHolderFragment();
-		}
-
-		public SplitPlaceHolderFragment() {
-			++id;
-		}
-
-		@Override
-		public View onCreateView(LayoutInflater inflater, ViewGroup container,
-								 Bundle savedInstanceState) {
-			LinearLayout v = (LinearLayout)inflater.inflate(R.layout.split_frag_test, container, false);
-			TextView tv = (TextView)v.findViewById(R.id.test_frag_text);
-//			TextView tv = (TextView) getView().findViewById(R.id.test_frag_text);
-			tv.setText("TestFrag" + id);
-			return v;
-		}
-
-		@Override
-		public void onAttach(Activity activity) {
-			super.onAttach(activity);
-		}
-	}
 }

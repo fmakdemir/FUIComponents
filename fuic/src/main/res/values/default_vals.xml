@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<dimen name="DEFAULT_HOLDER_SIZE">10dp</dimen>
+	<integer name="DEFAULT_SPLIT_WEIGHT">1</integer>
+	<fraction name="DEFAULT_MIN_SPLIT_RATIO">10%</fraction>
+	<fraction name="DEFAULT_MAX_SPLIT_RATIO">90%</fraction>
+</resources>

@@ -7,5 +7,7 @@
 		<attr name="firstWeight" format="integer" />
 		<attr name="secondWeight" format="integer" />
 		<attr name="holderSize" format="dimension" />
+		<attr name="minSplitRatio" format="fraction" />
+		<attr name="maxSplitRatio" format="fraction" />
 	</declare-styleable>
 </resources>

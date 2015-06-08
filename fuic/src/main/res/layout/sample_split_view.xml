@@ -11,6 +11,8 @@
 		android:paddingBottom="40dp"
 		app:firstWeight="4"
 		app:secondWeight="5"
+		app:minSplitRatio="10%"
+		app:maxSplitRatio="100%"
 		app:holderSize="20dp" />
 
 </FrameLayout>
